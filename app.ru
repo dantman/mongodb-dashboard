@@ -22,7 +22,9 @@ app = proc do |env|
 		
 		title = "MongoDB Dashboard"
 		body = ""
+		mongos_i = 0
 		config["mongos"].each { |mongos|
+			mongos_i += 1
 			name = mongos
 			begin
 				db = Mongo::Connection.from_uri(mongos).db("admin")
@@ -35,9 +37,7 @@ app = proc do |env|
 					begin
 						shard_db = Mongo::Connection.from_uri(shard["url"]).db("admin")
 						shard["online"] = true
-					
 						shard["replset"] = shard_db.command({ "replSetGetStatus" => 1 })["members"]
-					
 					rescue Mongo::ConnectionFailure
 						shard["online"] = false
 					end
@@ -53,6 +53,10 @@ app = proc do |env|
 	when "/style.css"
 		res.header["Content-Type"] = "text/css; charset=UTF-8"
 		res.write(File.open("./style.css", "r").read)
+	when /^\/step_down\/([-_.:a-z0-9]+:\d+)$/
+		db = Mongo::Connection.from_uri("mongodb://#{$1}").db("admin")
+		db.command({ "replSetStepDown" => true })
+		res.redirect(req.url.sub(/^([a-z]+:\/\/.+?)(\/.*)$/, "\\1"), 303)
 	else
 		res.status = 404
 		res.write "Not Found"

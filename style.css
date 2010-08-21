@@ -1,6 +1,6 @@
 
 .wrapper {
-	width: 620px;
+	width: 720px;
 	margin: 25px auto;
 }
 
@@ -13,7 +13,7 @@
 .replset {
 	background-color: #fff;
 	border-collapse: collapse;
-	width: 600px;
+	width: 700px;
 }
 
 .replset td, .replset th {

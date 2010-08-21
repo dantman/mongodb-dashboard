@@ -28,6 +28,7 @@ repl_set_state_names = {
 			<th>Health</th>
 			<th>State</th>
 			<th>Status</th>
+			<th>Actions</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -38,6 +39,11 @@ repl_set_state_names = {
 			<td class=health><%= set["health"] == 1 ? "UP" : "DOWN" %></td>
 			<td class=state><% if set["health"] == 1 %><%= repl_set_state_names[set["state"]] %><% else %>(was <%= repl_set_state_names[set["state"]] %>)<% end %></td>
 			<td class=status><%= set["errmsg"] || "" %></td>
+			<td class=actions>
+				<% if set["state"] == 1 %>
+				<a href="/step_down/<%= set["name"] %>">step down</a>
+				<% end %>
+			</td>
 		</tr>
 		<% } %>
 	</tbody>
