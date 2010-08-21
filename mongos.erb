@@ -1,0 +1,47 @@
+<%
+repl_set_state_names = {
+	0 => "Starting up, phase 1",
+	1 => "Primary",
+	2 => "Secondary",
+	3 => "Recovering",
+	4 => "Fatal error",
+	5 => "Starting up, phase 2",
+	6 => "Unknown state",
+	7 => "Arbiter",
+	8 => "Down",
+}
+%>
+<h3><%= name %></h3>
+<% if mongos_online %>
+<p>Mongos is online.</p>
+<% shards.each { |shard| %>
+<div>
+	<h4><%= shard["_id"] %></h4>
+	<% if shard["online"] %>
+	<p>Shard is online.</p>
+	<table border=1>
+		<tr>
+			<th>Member</th>
+			<th>ID</th>
+			<th>Health</th>
+			<th>State</th>
+			<th>Status</th>
+		</tr>
+		<% shard["replset"].each { |set| %> 
+		<tr class="replset_row <%= set["health"] == 1 ? "up" : "down" %><%= set["state"] == 1 ? " primary" : "" %>">
+			<td class=name><%= set["name"] %> [<a href="http://<%= to_web(set["name"]) %>/">web</a>, <a href="http://<%= to_web(set["name"]) %>/_replSet">replset</a>]</td>
+			<td class=id><%= set["_id"] %></td>
+			<td class=health><%= set["health"] == 1 ? "UP" : "DOWN" %></td>
+			<td class=state><% if set["health"] == 1 %><%= repl_set_state_names[set["state"]] %><% else %>(was <%= repl_set_state_names[set["state"]] %>)<% end %></td>
+			<td class=status><%= set["errmsg"] || "" %></td>
+		</tr>
+		<% } %>
+	</table>
+	<% else %>
+	<p>Shard appears to be offline.</p>
+	<% end %>
+</div>
+<% } %>
+<% else %>
+<p>Mongos appears to be offline.</p>
+<% end %>

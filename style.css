@@ -1,0 +1,8 @@
+
+.replset_row { background-color: #CFC }
+.replset_row.primary { background-color: #5C5 }
+.replset_row.down { background-color: #FCC }
+.replset_row.down .health { color: #A00 }
+.replset_row.down .state { color: #888 }
+.replset_row .status { color: #888 }
+
