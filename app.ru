@@ -32,22 +32,43 @@ app = proc do |env|
 				begin
 					db = Mongo::Connection.from_uri(mongos).db("admin")
 					mongos_online = true
-				
+					
+					configdb = nil
+					argv = db.command({ "getCmdLineOpts" => 1 })["argv"]
+					argv.shift
+					while arg = argv.shift
+						configdb = argv.shift if arg === "--configdb"
+					end
+					configdbs = nil
+					if configdb
+						configdbs = configdb.split(",").map { |cdb|
+							conf = {}
+							begin
+								conf_db = Mongo::Connection.from_uri("mongodb://#{cdb}").db("admin")
+								conf["name"] = cdb
+								conf["online"] = true
+							rescue Mongo::ConnectionFailure
+								conf["online"] = false
+							end
+							conf
+						}
+					end
+					
 					shards = db.command({ "listshards" => 1 })["shards"]
-				
+					
 					shards.each { |shard|
 						shard["url"] = "mongodb://#{shard["host"].sub(/.*\//, '')}"
 						begin
 							shard_db = Mongo::Connection.from_uri(shard["url"]).db("admin")
 							shard["online"] = true
-						
+							
 							shard["replset"] = shard_db.command({ "replSetGetStatus" => 1 })["members"]
-						
+							
 						rescue Mongo::ConnectionFailure
 							shard["online"] = false
 						end
 					}
-				
+					
 				rescue Mongo::ConnectionFailure
 					mongos_online = false
 				end

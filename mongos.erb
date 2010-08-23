@@ -15,12 +15,31 @@ repl_set_state_names = {
 <h3><%= name %> [<a href="<%=h to_web(name.sub(/^mongodb:\/\//, "")) %>/">web</a>]</h3>
 <% if mongos_online %>
 <p>Mongos is online.</p>
+<% if configdbs %>
+<h4>Config Servers</h4>
+<table class=servers>
+<thead>
+	<tr>
+		<th>Member</th>
+		<th>Health</th>
+	</tr>
+</thead>
+<tbody>
+	<% configdbs.each { |conf| %> 
+	<tr class="server_row <%= conf["online"] ? "up" : "down" %>">
+		<td class=name><%= conf["name"] %> [<a href="<%=h to_web(conf["name"]) %>/">web</a>]</td>
+		<td class=health><%= conf["online"] ? "UP" : "DOWN" %></td>
+	</tr>
+	<% } %>
+</tbody>
+</table>
+<% end %>
 <% shards.each { |shard| %>
 <div class=shard>
 	<h4><%= shard["_id"] %></h4>
 	<% if shard["online"] %>
 	<p>Shard is online.</p>
-	<table class=replset>
+	<table class=servers>
 	<thead>
 		<tr>
 			<th>Member</th>
@@ -32,7 +51,7 @@ repl_set_state_names = {
 	</thead>
 	<tbody>
 		<% shard["replset"].each { |set| %> 
-		<tr class="replset_row <%= set["health"] == 1 ? "up" : "down" %><%= set["state"] == 1 ? " primary" : "" %>">
+		<tr class="server_row <%= set["health"] == 1 ? "up" : "down" %><%= set["state"] == 1 ? " primary" : "" %>">
 			<td class=name><%= set["name"] %> [<a href="<%=h to_web(set["name"]) %>/">web</a>, <a href="<%= to_web(set["name"]) %>/_replSet">replset</a>]</td>
 			<td class=id><%= set["_id"] %></td>
 			<td class=health><%= set["health"] == 1 ? "UP" : "DOWN" %></td>
