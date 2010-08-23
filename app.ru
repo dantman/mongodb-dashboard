@@ -6,6 +6,7 @@ require 'mongo'
 require 'yaml'
 require 'erb'
 require 'net/http'
+require 'coderay'
 
 def to_web(host)
 	x = host.split ":"
@@ -17,14 +18,13 @@ def h(a)
 	ERB::Util.h(a)
 end
 
+config = YAML.load(File.open("./config.yml", "r").read)
 app = proc do |env|
 	req = Rack::Request.new env
 	res = Rack::Response.new
 	begin
 		case req.path_info
 		when "/"
-			config = YAML.load(File.open("./config.yml", "r").read)
-			
 			title = "MongoDB Dashboard"
 			body = ""
 			config["mongos"].each { |mongos|
@@ -87,8 +87,24 @@ app = proc do |env|
 			http_res = Net::HTTP.start(url.host, url.port) { |http| http.request(http_req) }
 			res.status = http_res.code
 			http_res.each_header { |key, value| res.header[key] = value }
-			body = http_res.body.gsub /href="\/(.*?)"/ do |m|
-				%Q[href="/rest/#{base}/#{$1}"]
+			body = http_res.body
+			case http_res.content_type
+			when /application\/json/
+				res.header["Content-Type"] = "text/html; charset=UTF-8"
+				# If rhino and js-beautify are present use them to clean up the data before highlighting
+				if config["rhino"]
+					require 'tempfile'
+					tmpfile = Tempfile.new("jsonreq#{(rand()*100000000000000).to_i.to_s(16)}")
+					tmpfile.write body
+					tmpfile.close
+					body = `cd js-beautify/; java -jar #{File.expand_path(config["rhino"])} beautify-cl.js #{File.expand_path(tmpfile.path)}`
+					tmpfile.unlink
+				end
+				body = CodeRay.scan(body, :js).div
+			when /text\/html/, nil, ""
+				body = body.gsub /href="\/(.*?)"/ do |m|
+					%Q[href="/rest/#{base}/#{$1}"]
+				end
 			end
 			res.write body
 		else
