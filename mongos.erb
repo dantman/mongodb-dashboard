@@ -12,7 +12,7 @@ repl_set_state_names = {
 }
 %>
 <div class=mongos>
-<h3><%= name %></h3>
+<h3><%= name %> [<a href="<%=h to_web(name.sub(/^mongodb:\/\//, "")) %>/">web</a>]</h3>
 <% if mongos_online %>
 <p>Mongos is online.</p>
 <% shards.each { |shard| %>
@@ -33,10 +33,10 @@ repl_set_state_names = {
 	<tbody>
 		<% shard["replset"].each { |set| %> 
 		<tr class="replset_row <%= set["health"] == 1 ? "up" : "down" %><%= set["state"] == 1 ? " primary" : "" %>">
-			<td class=name><%= set["name"] %> [<a href="http://<%= to_web(set["name"]) %>/">web</a>, <a href="http://<%= to_web(set["name"]) %>/_replSet">replset</a>]</td>
+			<td class=name><%= set["name"] %> [<a href="<%=h to_web(set["name"]) %>/">web</a>, <a href="<%= to_web(set["name"]) %>/_replSet">replset</a>]</td>
 			<td class=id><%= set["_id"] %></td>
 			<td class=health><%= set["health"] == 1 ? "UP" : "DOWN" %></td>
-			<td class=state><% if set["health"] == 1 %><%= repl_set_state_names[set["state"]] %><% else %>(was <%= repl_set_state_names[set["state"]] %>)<% end %></td>
+			<td class=state><% if set["health"] == 1 %><%=h repl_set_state_names[set["state"]] %><% else %>(was <%= repl_set_state_names[set["state"]] %>)<% end %></td>
 			<td class=status><%= set["errmsg"] || "" %></td>
 		</tr>
 		<% } %>
