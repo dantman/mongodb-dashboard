@@ -86,6 +86,7 @@ app = proc do |env|
 			http_req = Net::HTTP::Get.new(url.path)
 			http_res = Net::HTTP.start(url.host, url.port) { |http| http.request(http_req) }
 			res.status = http_res.code
+			http_res.each_header { |key, value| res.header[key] = value }
 			body = http_res.body.gsub /href="\/(.*?)"/ do |m|
 				%Q[href="/rest/#{base}/#{$1}"]
 			end
